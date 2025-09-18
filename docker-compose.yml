@@ -1,0 +1,33 @@
+version: '3.8'
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: skyshield
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+  backend:
+    build: ./backend
+    volumes:
+      - ./backend/models:/app/models
+      - ./thumbnails:/app/thumbnails
+      - ./backend/logs:/app/logs
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/skyshield
+      - WEIGHTS_PATH=/app/models/yolov8n.pt
+      - DEVICE=cpu
+      - JWT_SECRET=change_me
+    ports:
+      - '5000:5000'
+    depends_on:
+      - db
+  frontend:
+    build: ./frontend
+    ports:
+      - '3000:3000'
+    depends_on:
+      - backend
+volumes:
+  pgdata:

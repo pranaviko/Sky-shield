@@ -1,0 +1,19 @@
+# Jetson-optimized Dockerfile (example)
+# This Dockerfile targets NVIDIA Jetson devices (JetPack). It uses NVIDIA's L4T PyTorch container as base.
+# You may need to change the base image to match your JetPack / L4T version.
+#
+# NOTE: Building on-device can be slow. An alternative is to build on a compatible host or use NVIDIA's prebuilt images.
+
+FROM nvcr.io/nvidia/l4t-pytorch:r35.1.0-pth2.2-py3
+
+# Install system deps
+RUN apt-get update && apt-get install -y ffmpeg libgl1 libglib2.0-0 git && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+COPY requirements.txt .
+# On Jetson, pip wheel installation of torch is not needed since base image provides torch.
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . /app
+EXPOSE 5000
+CMD ["gunicorn", "-k", "eventlet", "-w", "1", "app:app", "-b", "0.0.0.0:5000"]
